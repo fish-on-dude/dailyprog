@@ -1,0 +1,16 @@
+      PROGRAM dottie
+
+! find the DOTTIE number
+! this is the number that results when you take the COS of a number
+!     repeatedly until it stops changing.
+
+
+      x = 1.0
+
+      do i = 1, 100
+         x = cos(x)
+      end do
+
+      write(6, '(A, 0.3F)'), 'The dottie number is ', x
+      END PROGRAM
+      

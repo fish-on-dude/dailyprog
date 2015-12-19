@@ -1,0 +1,19 @@
+      program spiral
+      interface
+         function oddsquares(n)
+         integer oddsquares
+         end function
+      end interface
+
+      
+      end program
+
+
+! calculate sequence A016754
+      recursive function oddsquares(n) result(os)
+      if (n == 1) return 1
+      os = 8*n + oddsquares(n-1)
+      end function
+
+      
+      

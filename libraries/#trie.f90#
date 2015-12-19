@@ -1,0 +1,13 @@
+program findpalindrome
+  integer, parameter :: NUMWORDS = 10000, WORDSIZE = 50
+  type pword
+     character*(:), pointer :: word
+     integer :: len
+     integer :: longest_tail ! longest palindromic tail
+  end type pword
+
+  type(pword) :: dictionary(NUMWORDS)
+
+  character*(WORDSIZE) :: aline
+  
+  

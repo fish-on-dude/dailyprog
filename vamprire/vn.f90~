@@ -1,0 +1,70 @@
+    program vn
+        use timer
+        implicit none
+
+        integer, allocatable :: ifact(:) 
+        logical okay
+        integer p , n , m , minf, maxf, i, dc(0:9)
+
+        read(10,*) n, m ! # of digits in the number, # of fangs
+        print*, n,m
+        allocate(ifact(m))
+        if (mod(n,m) /=0) stop
+        call tic()
+
+        minf = 10**(n/m-1)
+        maxf = 10*minf-1
+        ifact = minf
+    20      format(i, '=', *(i:'*'))  
+        do
+            okay = iterate(ifact, minf, maxf)
+            if (.not. okay) exit
+            if (count(mod(ifact,10)==0)>1) cycle ! more than one trailing zero
+
+            dc = 0
+            do i=1,m
+                dc = dc + digitcount(ifact(i))
+            end do
+            p = product(ifact,1)
+            if (all(dc == digitcount(p))) then
+                write(*,20) p, ifact
+            end if 
+        end do
+        call toc()
+        print*, 'elapsed: ', getElapsed(), 'ms'
+    contains
+    function digitcount(num) result(dc)
+
+        integer dc(0:9)
+        integer, intent(in) :: num
+        integer d
+
+        n = num
+        dc = 0
+        do while (n > 0)
+            d = mod(n, 10)
+            dc(d) = dc(d) + 1
+            n = n / 10
+        end do
+
+    end function
+
+    recursive function iterate(ifac,imin, imax) result(okay)
+        logical okay
+        integer ifac(:)
+        integer n, imin, imax
+
+        n = size(ifac)
+        if (ifac(n) < imax) then
+            ifac(n) = ifac(n) + 1
+            okay = .true.
+
+        else if (n == 1) then
+            okay = .false.
+        else 
+            okay = iterate(ifac(1:n-1), imin, imax)
+            ifac(n) = ifac(n-1)
+        end if
+    end function
+
+end program 

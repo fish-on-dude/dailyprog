@@ -1,0 +1,16 @@
+interface
+subroutine irref(A, c, order, code)
+        ! IRREF - reduced row echelon form via integer-only arithmatic
+        !  Implements Gaussian elimination on matrix A
+        !  C is a column vector solving Ac = 0
+        !  ORDER tracks any row switches that occurred
+        !  CODE is 0 if there is a unique solution, -1 if
+        !   the system is infeasible, and 1 if more than one
+        !   solution is possible
+ 
+                    integer, intent(inout) ::A(:,:)
+                    integer, intent(out)   ::C(:)
+                    integer, intent(out)   ::ORDER(:)
+                    integer, intent(out)   ::CODE
+end subroutine
+end interface

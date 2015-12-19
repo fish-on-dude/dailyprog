@@ -1,0 +1,17 @@
+program marry
+  ! implement Gale-Shapley algo
+  integer, parameter :: N = 3
+  character*(1):: suitors(N), reviewers(N), sprefs(N,N), rprefs(N,N)
+  character*(256) :: aline
+  integer i, j, k ! loop vars
+
+
+  read(10, '(A1)') (suitors(i), (sprefs(j, i), j=1,N), i=1,N)
+
+  print*, suitors
+  print*, (sprefs(:,i), i=1,N)
+
+end program marry
+
+
+  

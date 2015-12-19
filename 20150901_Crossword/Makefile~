@@ -1,0 +1,4 @@
+FC=gfortran
+
+%.o : %.f90
+	$(FC) $(FFLAGS) -c

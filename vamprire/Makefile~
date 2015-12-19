@@ -1,0 +1,7 @@
+
+FC=gfortran
+FCFLAGS=-O3 -fopenmp
+
+% :: %.f90
+	$(FC) $(FCFLAGS) $< -o $@
+	

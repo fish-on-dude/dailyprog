@@ -1,0 +1,123 @@
+module askymod
+  implicit none
+  integer, allocatable :: building(:, :)
+  character, allocatable:: blueprint(:,:);
+  integer, parameter:: BP_MAXWIDTH=32, &
+       SCALE_W = 4, SCALE_H = 2, &
+       INT_BIT =1, WALL_BIT=2,&
+       TRUSS_BIT = 3, ROOF_BIT=4, WINDOW_BIT=5, DOOR_BIT=6,&
+       DOORJAM_BIT = 7, 
+  integer :: BP_WIDTH, BLDG_WIDTH, BP_HEIGHT, BLDG_HEIGHT
+
+contains
+  elemental integer function BLH(i)
+    integer, intent(in) :: i
+    BLH = (i-1)*SCALE_H+1
+  end function BLH
+  elemental integer function BLW(i)
+    integer, intent(in) :: i 
+    BLW = (i-1)/SCALE_W+1
+  end function BLW
+  elemental integer function BPH(i)
+    integer, intent(in) :: i
+    BPH = (i-1)*SCALE_H+1
+  end function BPH
+  elemental integer function BPW(i)
+    integer, intent(in) :: i
+    BPW = (i-1)*SCALE_W+1
+  end function BPW
+  elemental logical function BP(x,y)
+    integer, intent(in): x,y
+    BP = blueprint(BPW(x), BPH(y)) == '*'
+  end function BP
+  elemental subroutine setbit(int, bit)
+    integer, intent(inout) :: int
+    integer, intent(in):: bit
+    int = ibset(int, bit)
+  end subroutine setbit
+  elemental logical function q(int, bit)
+    integer, intent(in) :: int, bit
+    q = btest(int, bit)
+  end function q
+  character function c(int)
+    integer, intent(in) :: int
+    if(q(int, WALL_BIT).and.q(int, TRUSS_BIT)) then
+       c = '+'
+    else if (q(int, WALL_BIT)) then
+       c = '|'
+    else if (q(int, TRUSS_BIT).or. q(int, FLOOR_BIT)) then
+       c = '-'
+    else if (q(int, RSH_BIT).and.q(int, LSH_BIT)) then
+       c = 'A'
+    else if (q(int, RSH_BIT)) then
+       c = '\'
+    else if (q(int, LSH_BIT)) then
+       c = '/'
+    else if (q(int, DOORJAM_BIT)) then
+       c = '|'
+       end if
+
+  subroutine init_blueprint
+    integer N, i, j
+    integer, allocatable, dimension(:,:):: L, R, LB, B, RB, T, TMP
+    read(10, *)  BP_HEIGHT 
+    allocate(blueprint(0:BP_MAXWIDTH, 0:BP_HEIGHT))
+    do i=N, 1, -1
+       read(10, '(A1)', advance='no', eor=100) (blueprint(j,i), j=1,BP_MAXWIDTH)
+10  continue
+    end do
+    do i=1,BP_MAXWIDTH
+       if (blueprint(i, 1) == ' ') then
+          BP_WIDTH = i-1
+          exit
+       end if
+    end do
+    
+    BLDG_WIDTH = BLW(BP_WIDTH)
+    BLDG_HEIGHT = BLH(BP_HEIGHT) + BLDG_WIDTH/2
+    allocate(building(BLDG_WIDTH, BLDG_HEIGHT))
+    building = 0
+    do concurrent( i=1: BLDG_WIDTH, j=1: BLDG_HEIGHT)
+       if(BP(i,j)) &
+          call setbit(building(i,j), INT_BIT)
+    end do
+    do concurrent(i=1:BL_WIDTH, j=1:BL_HEIGHT)
+       call setbit(building(BLW(i), BLH(j)), WINDOW_BIT)
+    end do
+    
+    allocate(L, R, LB, B, RB, T,TMP, MOLD=building)
+
+    R = eoshift(building, -1)
+    T =  eoshift(building, -1,dim=2)
+
+    where (btest(IEOR(building, IAND(eoshift(building, 1),&
+              eoshift(building, -1))), INT_BIT)) &
+         call setbit(building, WALL_BIT)
+    where (btest(IEOR(building,  eoshift(building, -1,dim=2)), INT_BIT)) &
+         call setbit(building, TRUSS_BIT)
+
+    where(btest(building, TRUSS_BIT)) call setbit(building, ROOF_BIT)
+
+    do i=1, BLDG_HEIGHT
+       tmp = btest(building(:,i-1), ROOF_BIT)
+       where (btest(iand(tmp, iand(eoshift(tmp, -1), &
+            eoshift(tmp,1))), ROOF_BIT))&
+            call setbit(building(:, i), ROOF_BIT)
+    end do
+
+    where (btest(iand(building, not(eoshift(building, -1))), ROOF_BIT))&
+         call setbit(building, RSH_BIT)
+    where (btest(iand(building, not(eoshift(building 1))), ROOF_BIT))&
+         call setbit(building, LSH_BIT)
+
+    do concurrent(i=1:BP_WIDTH, j=1:BP_HEIGHT)
+       call setbit(building(BLW(i), BLH(j)), WINDOW_BIT)
+    end do
+    
+    idoor = BP_WIDTH * random_number()
+    call setbit(building(BLW(idoor)-1, 1), DOORJAM_BIT)
+    call setbit(building(BLH(idoor)+1, 1), DOORJAM_BIT)
+    
+       
+    
+    
