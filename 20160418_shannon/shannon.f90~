@@ -1,0 +1,28 @@
+!!!   shannon.f90   !!!
+
+program shannon
+    integer, parameter :: LLEN=180, MASCII=127
+    character(len=LLEN) :: chars
+    integer :: cc(0:MASCII)
+    real f(0:MASCII)
+
+    READLINE: do 
+        cc = 0
+        read(10, '(A)', iostat=ios) chars
+        print*, chars
+        if (ios .ne. 0) exit
+        COUNTCHARS: do i=1,len_trim(chars)
+            ic = iachar(chars(i:i))
+            cc(ic) = cc(ic) + 1
+        end do COUNTCHARS
+
+        f = real(cc) / len_trim(chars)
+
+        where(cc .gt. 0)
+            f = -1. *  f * log(f)/log(2.0)
+        end where
+
+        print *, sum(f)
+    end do READLINE
+  end program shannon
+  

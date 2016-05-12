@@ -1,0 +1,122 @@
+module wl_dictionary_m
+  IMPLICIT NONE
+  ! contains a word list and the ability to do a search in the
+  ! list.  An object accepts one letter at a time.  If the prefix is
+  ! not the beginning of a word in the list, it returns the longest
+  ! word previously found, (or NIL if none).  If the prefix is the
+  ! beginning of one or more words, it returns the number of words.
+
+  type wl_node
+     type(wl_node), pointer :: next     ! sibling node
+     type(wl_node), pointer :: child    ! linked list of children
+     logical :: end_word = .FALSE.        ! true if this is a legal word
+     character*(1) :: char
+     ! far
+
+     contains
+       procedure, pass :: add_char
+       procedure, pass :: next_char
+       procedure, pass :: finalize
+
+  end type wl_node
+  
+  type(wl_node) :: dictionary  ! contains all starting points
+
+  contains
+
+  subroutine create_dictionary(lunit)
+    character*(50) ::  word
+    integer ios, lunit
+    allocate(dictionary%next(26))
+    do
+       read(lunit, '(a)', iostat =ios) word
+       if (ios < 0) exit
+       call add_word(trim(adjustl(word)))
+    end do
+  end subroutine create_dictionary
+
+  function start_word(ch) result(wn)
+    type(wl_node), pointer :: wn
+    character(*) ch
+    wn => dictionary%add_char(ch)
+  end function start_word
+
+  function chplace(ch) result (p)
+    integer p
+    character*(1) :: ch
+    p = iachar(ch) - iachar('a') + 1
+  end function chplace
+
+  
+  subroutine add_word(word)
+    character(*) word
+    integer n
+    type(wl_node), pointer :: wn
+    wn => start_word(word)
+    do n=2,len(word)
+       wn => wn%add_char(word(n:n))
+    end do
+    call wn%finalize()
+  end subroutine add_word
+
+  function next_char(start_node, char, add) result(next_node)
+    class(wl_node) :: start_node
+    type(wl_node), pointer :: next_node
+    character*(1) :: char
+    integer n
+    logical, optional :: add
+    
+    start_node%any_longer = .TRUE.
+    n = chplace(char)
+    next_node => start_node%next(n)
+    if (associated(next_node) ) return
+    if (present(add) ) then
+       if (add .EQV. .FALSE.) return
+    end if
+    
+    !add this character to the next node
+    allocate(next_node)
+    allocate(next_node%next(26))
+    start_node%next(n) => next_node
+    next_node%prefix = start_node%prefix // char
+  end function next_char
+  
+  function add_char(start_node, char) result(next_node)
+    class(wl_node) :: start_node
+    type(wl_node) :: next_node
+    character*(1) :: char
+    
+    next_node = start_node%next_char(char, .TRUE.)
+  end function add_char
+
+  subroutine finalize(node)
+    class(wl_node) :: node
+    node%end_word = .TRUE.
+  end subroutine finalize
+end module wl_dictionary_m
+
+  
+
+
+
+
+program decompact
+  use wl_dictionary_m
+  IMPLICIT NONE
+  ! read in an ASCII grid with words connected crossword-style, and a
+  ! word list.  Return all the words in the grid and the list.
+  !
+  ! algorithm: for each letter in the grid, we perform 4 searches, one
+  ! in each direction.  At each step, we add a new letter to
+  ! the search.  When the search terminate, we collect
+  ! the longest word found.
+
+
+  call create_dictionary(10)
+  
+
+
+
+
+
+end program decompact
